@@ -5,8 +5,8 @@ import cors from 'cors';
 import passport from 'passport';
 import { Server } from 'http';
 
-import { applyMigrations } from './migrations';
-import { applyMetadata } from './metadata';
+// import { applyMigrations } from './migrations';
+// import { applyMetadata } from './metadata';
 import { ENV } from './utils/env';
 import { waitForHasura } from './helpers';
 import router from './routes';
