@@ -40,9 +40,9 @@ export { app };
 export const start = async (): Promise<Server> => {
   // wait for hasura to be ready
   await waitForHasura();
-  // apply migrations and metadata
-  await applyMigrations();
-  await applyMetadata();
+  // apply migrations and metadata on our own
+  // await applyMigrations();
+  // await applyMetadata();
 
   return new Promise((resolve) => {
     const server = app.listen(ENV.AUTH_PORT, ENV.AUTH_HOST, () => {
