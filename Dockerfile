@@ -21,5 +21,5 @@ RUN pnpm install --frozen-lockfile --prod --config.enable-pre-post-scripts=true 
 COPY migrations/ ./migrations/
 COPY email-templates/ ./email-templates
 COPY --from=builder ./app/dist dist/
-HEALTHCHECK --interval=60s --timeout=2s --retries=3 CMD wget ${AUTH_HOST}:${AUTH_PORT}/healthz -q -O - > /dev/null 2>&1
+HEALTHCHECK --interval=60s --timeout=2s --retries=3 CMD wget ${AUTH_HOST}:${AUTH_PORT}/v1/auth/healthz -q -O - > /dev/null 2>&1
 CMD ["pnpm", "run", "start"]

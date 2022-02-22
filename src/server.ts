@@ -32,7 +32,7 @@ app.use(authMiddleware);
 
 app.use(passport.initialize());
 
-app.use(router);
+app.use('/v1/auth', router);
 app.use(errors);
 
 export { app };
