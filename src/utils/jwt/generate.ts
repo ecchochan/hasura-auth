@@ -5,7 +5,7 @@ import { ENV } from '../env';
 import { generateCustomClaims } from './custom-claims';
 
 // const RSA_TYPES = ["RS256", "RS384", "RS512"];
-const ALLOWED_JWT_TYPES = ['HS256', 'HS384', 'HS512'];
+const ALLOWED_JWT_TYPES = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'];
 
 const jwt = JSON.parse(ENV.HASURA_GRAPHQL_JWT_SECRET) as JwtSecret;
 
