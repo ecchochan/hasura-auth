@@ -184,6 +184,17 @@ export const ENV = {
     }
   },
 
+  // HOTSHOTS
+  get AUTH_HOTSHOTS_HOST() {
+    return castStringEnv('AUTH_HOTSHOTS_HOST', '');
+  },
+  get AUTH_HOTSHOTS_PORT() {
+    return castStringEnv('AUTH_HOTSHOTS_PORT', '');
+  },
+  get AUTH_HOTSHOTS_PREFIX() {
+    return castStringEnv('AUTH_HOTSHOTS_PREFIX', '');
+  },
+
   get AUTH_USER_SESSION_VARIABLE_FIELDS(): Record<string, string> {
     return this.AUTH_USER_SESSION_VARIABLE_FIELDS;
   },
