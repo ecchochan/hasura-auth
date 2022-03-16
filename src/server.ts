@@ -32,7 +32,9 @@ app.use(authMiddleware);
 
 app.use(passport.initialize());
 
-app.use(router);
+if (ENV.AUTH_PATH_PREFIX) app.use(ENV.AUTH_PATH_PREFIX, router);
+else app.use(router);
+
 app.use(errors);
 
 export { app };

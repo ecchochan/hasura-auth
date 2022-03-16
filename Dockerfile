@@ -22,5 +22,5 @@ RUN pnpm run postinstall
 COPY migrations/ ./migrations/
 COPY email-templates/ ./email-templates
 COPY --from=builder ./app/dist dist/
-HEALTHCHECK --interval=60s --timeout=2s --retries=3 CMD wget ${AUTH_HOST}:${AUTH_PORT}/healthz -q -O - > /dev/null 2>&1
+HEALTHCHECK --interval=60s --timeout=2s --retries=3 CMD wget ${AUTH_HOST}:${AUTH_PORT}${AUTH_PATH_PREFIX}/healthz -q -O - > /dev/null 2>&1
 CMD ["pnpm", "run", "start"]
