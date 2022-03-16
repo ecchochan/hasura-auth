@@ -81,6 +81,7 @@ specifiers:
   gravatar: ^1.8.1
   helmet: 3.22.0
   hibp: 9.0.0
+  hot-shots: ^9.0.0
   husky: ^7.0.4
   jest: ^27.4.7
   jest-extended: 0.11.5
@@ -152,6 +153,7 @@ dependencies:
   gravatar: 1.8.2
   helmet: 3.22.0
   hibp: 9.0.0
+  hot-shots: 9.0.0
   joi: 17.6.0
   joi-to-swagger: 6.0.1_joi@17.6.0
   jose: 1.28.1
@@ -3327,6 +3329,13 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  /bindings/1.5.0:
+    resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    dependencies:
+      file-uri-to-path: 1.0.0
+    dev: false
+    optional: true
+
   /bl/4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
     dependencies:
@@ -5459,6 +5468,11 @@ packages:
       flat-cache: 2.0.1
     dev: true
 
+  /file-uri-to-path/1.0.0:
+    resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+    dev: false
+    optional: true
+
   /fill-range/4.0.0:
     resolution: {integrity: sha1-1USBHUKPmOsGpj3EAtJAPDKMOPc=}
     engines: {node: '>=0.10.0'}
@@ -6277,6 +6291,13 @@ packages:
     dependencies:
       lru-cache: 6.0.0
     dev: true
+
+  /hot-shots/9.0.0:
+    resolution: {integrity: sha512-fpljto22PvfzDGznnzUpWgFMgccyZRtWo+fY8R4ktwipkv3ywDyeaTLijYaM629DEZvtnEDAN00yV6zxzivnpQ==}
+    engines: {node: '>=6.0.0'}
+    optionalDependencies:
+      unix-dgram: 2.0.4
+    dev: false
 
   /hpkp/2.0.0:
     resolution: {integrity: sha1-EOFCJk52IVpdMMROxD3mTe5tFnI=}
@@ -8690,6 +8711,11 @@ packages:
     resolution: {integrity: sha512-pa+cQvmhoM8zzgitPYZErmDt9EdTNVnXsH1XFjMeM4TyG4FFcgxrvK1+jwabVFwUOEDaSWuXBMjg43kqt/Ydlg==}
     engines: {node: '>=12.0.0'}
     dev: true
+
+  /nan/2.15.0:
+    resolution: {integrity: sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==}
+    dev: false
+    optional: true
 
   /nanomatch/1.2.13:
     resolution: {integrity: sha512-fpoe2T0RbHwBTBUOftAfBPaDEi06ufaUai0mE6Yn1kacc3SnTErfb/h+X94VXzI64rKFHYImXSvdwGGCmwOqCA==}
@@ -11635,6 +11661,16 @@ packages:
     resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
     engines: {node: '>= 10.0.0'}
     dev: true
+
+  /unix-dgram/2.0.4:
+    resolution: {integrity: sha512-7tpK6x7ls7J7pDrrAU63h93R0dVhRbPwiRRCawR10cl+2e1VOvF3bHlVJc6WI1dl/8qk5He673QU+Ogv7bPNaw==}
+    engines: {node: '>=0.10.48'}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      nan: 2.15.0
+    dev: false
+    optional: true
 
   /unixify/1.0.0:
     resolution: {integrity: sha1-OmQcjC/7zk2mg6XHDwOkYpQMIJA=}

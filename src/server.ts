@@ -14,12 +14,15 @@ import { errors } from './errors';
 import { authMiddleware } from './middleware/auth';
 import { pino, logger, LOG_LEVEL } from './logger';
 import { addOpenApiRoute } from './openapi';
+import { statsdMiddleware } from './middleware/statsd';
 
 const app = express();
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+app.use(statsdMiddleware);
 
 addOpenApiRoute(app);
 

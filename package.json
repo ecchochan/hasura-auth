@@ -49,6 +49,7 @@
     "gravatar": "^1.8.1",
     "helmet": "3.22.0",
     "hibp": "9.0.0",
+    "hot-shots": "^9.0.0",
     "joi": "^17.4.0",
     "joi-to-swagger": "^6.0.1",
     "jose": "1.28.1",
