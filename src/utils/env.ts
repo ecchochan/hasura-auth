@@ -187,4 +187,8 @@ export const ENV = {
   get AUTH_USER_SESSION_VARIABLE_FIELDS(): Record<string, string> {
     return this.AUTH_USER_SESSION_VARIABLE_FIELDS;
   },
+
+  get AUTH_PERFORM_MIGRATION_ON_STARTUP() {
+    return castBooleanEnv('AUTH_PERFORM_MIGRATION_ON_STARTUP', true);
+  },
 };

@@ -1,6 +1,7 @@
 import { PROVIDERS } from '@config/index';
 import { castObjectEnv } from '@config/utils';
 import { logger } from './logger';
+import { ENV } from './utils/env';
 
 function isUnset(val?: string) {
   return (
@@ -32,12 +33,18 @@ if (process.env.AUTH_JWT_CUSTOM_CLAIMS) {
   'HASURA_GRAPHQL_JWT_SECRET',
   'HASURA_GRAPHQL_GRAPHQL_URL',
   'HASURA_GRAPHQL_ADMIN_SECRET',
-  'HASURA_GRAPHQL_DATABASE_URL',
 ].forEach((env) => {
   if (isUnset(process.env[env])) {
     errors.push(`No value was provided for required env var ${env}`);
   }
 });
+
+if (ENV.AUTH_PERFORM_MIGRATION_ON_STARTUP)
+  ['HASURA_GRAPHQL_DATABASE_URL'].forEach((env) => {
+    if (isUnset(process.env[env])) {
+      errors.push(`No value was provided for required env var ${env}`);
+    }
+  });
 
 if (PROVIDERS.apple) {
   [
