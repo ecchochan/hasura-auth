@@ -27,9 +27,6 @@ export const ENV = {
   },
 
   // SERVER
-  get AUTH_HOST() {
-    return castStringEnv('AUTH_HOST', '0.0.0.0');
-  },
   get AUTH_PORT() {
     return castIntEnv('AUTH_PORT', 4000);
   },
@@ -96,7 +93,7 @@ export const ENV = {
 
   // CLIENT
   get AUTH_CLIENT_URL() {
-    return castStringEnv('AUTH_CLIENT_URL', '');
+    return castStringEnv('AUTH_CLIENT_URL', '').toLocaleLowerCase();
   },
 
   // SIGN UP
@@ -137,7 +134,10 @@ export const ENV = {
     return castStringEnv('AUTH_LOCALE_DEFAULT', 'en');
   },
   get AUTH_LOCALE_ALLOWED_LOCALES() {
-    return castStringArrayEnv('AUTH_LOCALE_ALLOWED_LOCALES') || ['en'];
+    const locales = castStringArrayEnv('AUTH_LOCALE_ALLOWED_LOCALES');
+    if (!locales.includes(ENV.AUTH_LOCALE_DEFAULT))
+      locales.push(ENV.AUTH_LOCALE_DEFAULT);
+    return locales;
   },
 
   // SIGN IN
@@ -154,7 +154,9 @@ export const ENV = {
   //   return castBooleanEnv('AUTH_SIGNIN_PHONE_NUMBER_VERIFIED_REQUIRED', true);
   // },
   get AUTH_ACCESS_CONTROL_ALLOWED_REDIRECT_URLS() {
-    return castStringArrayEnv('AUTH_ACCESS_CONTROL_ALLOWED_REDIRECT_URLS');
+    return castStringArrayEnv('AUTH_ACCESS_CONTROL_ALLOWED_REDIRECT_URLS').map(
+      (v) => v.toLowerCase()
+    );
   },
   get AUTH_MFA_ENABLED() {
     return castBooleanEnv('AUTH_MFA_ENABLED', false);
@@ -168,7 +170,7 @@ export const ENV = {
     return castIntEnv('AUTH_ACCESS_TOKEN_EXPIRES_IN', 900);
   },
   get AUTH_REFRESH_TOKEN_EXPIRES_IN() {
-    return castIntEnv('AUTH_REFRESH_TOKEN_EXPIRES_IN', 43200);
+    return castIntEnv('AUTH_REFRESH_TOKEN_EXPIRES_IN', 2_592_000);
   },
 
   // EMAIL TEMPLATES
@@ -205,4 +207,11 @@ export const ENV = {
   get AUTH_PERFORM_MIGRATION_ON_STARTUP() {
     return castBooleanEnv('AUTH_PERFORM_MIGRATION_ON_STARTUP', true);
   },
+  // * See ../server.ts
+  // get AUTH_SKIP_INIT() {
+  //   return castBooleanEnv('AUTH_SKIP_INIT', false);
+  // },
+  // get AUTH_SKIP_SERVE() {
+  //   return castBooleanEnv('AUTH_SKIP_SERVE', false);
+  // },
 };

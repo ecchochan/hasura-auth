@@ -1,22 +1,22 @@
 import { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-import { gqlSdk } from '../gqlSDK';
-import { isValidEmail } from '../email';
-import { getUserByEmail, isValidRedirectTo } from '@/helpers';
-import { isRolesValid } from '../roles';
+import { gqlSdk } from '../gql-sdk';
+import { createEmailRedirectionLink, getUserByEmail } from '@/utils';
 import { ENV } from '../env';
 import { emailClient } from '@/email';
 import { generateTicketExpiresAt } from '../ticket';
+import { sendError } from '@/errors';
+import { EMAIL_TYPES } from '@/types';
 
 export type BodyTypePasswordlessEmail = {
   signInMethod: 'passwordless';
   connection: 'email';
   email: string;
   options: {
-    allowedRoles?: string[];
-    defaultRole?: string;
-    redirectTo?: string;
+    allowedRoles: string[];
+    defaultRole: string;
+    redirectTo: string;
   };
 };
 
@@ -30,37 +30,18 @@ export const handleDeanonymizeUserPasswordlessEmail = async (
   });
 
   if (user?.isAnonymous !== true) {
-    return res.boom.badRequest('Logged in user is not anonymous');
+    return sendError(res, 'user-not-anonymous');
   }
 
-  const { email, options } = body;
-
-  // check if redirectTo is valid
-  const redirectTo = options?.redirectTo ?? ENV.AUTH_CLIENT_URL;
-  if (!isValidRedirectTo(redirectTo)) {
-    return res.boom.badRequest(`'redirectTo' is not valid`);
-  }
-
-  // check email
-  if (!(await isValidEmail({ email, res }))) {
-    // function send potential error via `res`
-    return;
-  }
+  const {
+    email,
+    options: { redirectTo, defaultRole, allowedRoles },
+  } = body;
 
   // check if email already in use by some other user
   if (await getUserByEmail(email)) {
-    return res.boom.conflict('Email already in use');
+    return sendError(res, 'email-already-in-use');
   }
-
-  // check roles
-  const defaultRole = options?.defaultRole ?? ENV.AUTH_USER_DEFAULT_ROLE;
-  const allowedRoles =
-    options?.allowedRoles ?? ENV.AUTH_USER_DEFAULT_ALLOWED_ROLES;
-  if (!(await isRolesValid({ defaultRole, allowedRoles, res }))) {
-    return;
-  }
-
-  const userRoles = allowedRoles.map((role: string) => ({ role, userId }));
 
   // delete existing (anonymous) user roles
   await gqlSdk.deleteUserRolesByUserId({
@@ -69,7 +50,7 @@ export const handleDeanonymizeUserPasswordlessEmail = async (
 
   // insert new user roles (userRoles)
   await gqlSdk.insertUserRoles({
-    userRoles,
+    userRoles: allowedRoles.map((role: string) => ({ role, userId })),
   });
 
   const ticket = `verifyEmail:${uuidv4()}`;
@@ -106,6 +87,11 @@ export const handleDeanonymizeUserPasswordlessEmail = async (
     });
 
     const template = 'signin-passwordless';
+    const link = createEmailRedirectionLink(
+      EMAIL_TYPES.SIGNIN_PASSWORDLESS,
+      ticket,
+      redirectTo
+    );
     await emailClient.send({
       template,
       message: {
@@ -123,14 +109,18 @@ export const handleDeanonymizeUserPasswordlessEmail = async (
             prepared: true,
             value: template,
           },
+          'x-link': {
+            prepared: true,
+            value: link,
+          },
         },
       },
       locals: {
-        link: `${ENV.AUTH_SERVER_URL}/verify?&ticket=${ticket}&type=signinPasswordless&redirectTo=${redirectTo}`,
+        link,
         displayName: user.displayName,
         email,
         ticket,
-        redirectTo,
+        redirectTo: encodeURIComponent(redirectTo),
         locale: user.locale ?? ENV.AUTH_LOCALE_DEFAULT,
         serverUrl: ENV.AUTH_SERVER_URL,
         clientUrl: ENV.AUTH_CLIENT_URL,

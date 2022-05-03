@@ -1,17 +1,11 @@
-import { SuperTest, Test, agent } from 'supertest';
-import { Server } from 'http';
-import getPort from 'get-port';
 import { Client } from 'pg';
 import * as faker from 'faker';
+import { StatusCodes } from 'http-status-codes';
 
 import { ENV } from '../../../src/utils/env';
-import { app } from '../../../src/server';
+import { request } from '../../server';
 import { isValidAccessToken } from '../../utils';
 import { SignInResponse } from '../../../src/types';
-
-let request: SuperTest<Test>;
-
-let server: Server;
 
 describe('anonymous', () => {
   let client: Client;
@@ -29,13 +23,6 @@ describe('anonymous', () => {
 
   beforeEach(async () => {
     await client.query(`DELETE FROM auth.users;`);
-
-    server = app.listen(await getPort(), ENV.AUTH_HOST);
-    request = agent(server);
-  });
-
-  afterEach(async () => {
-    server.close();
   });
 
   it('should sign in as anonymous', async () => {
@@ -47,7 +34,7 @@ describe('anonymous', () => {
 
     const { body }: { body: SignInResponse } = await request
       .post('/signin/anonymous')
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     expect(body.session).toBeTruthy();
 
@@ -70,7 +57,7 @@ describe('anonymous', () => {
       .send({
         email: faker.internet.email(),
       })
-      .expect(400);
+      .expect(StatusCodes.BAD_REQUEST);
   });
 
   it('should fail to sign in anonymously if not enabled', async () => {
@@ -80,6 +67,6 @@ describe('anonymous', () => {
       AUTH_ANONYMOUS_USERS_ENABLED: false,
     });
 
-    await request.post('/signin/anonymous').expect(404);
+    await request.post('/signin/anonymous').expect(StatusCodes.NOT_FOUND);
   });
 });

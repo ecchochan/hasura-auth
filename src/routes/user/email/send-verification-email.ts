@@ -1,48 +1,49 @@
-import { Response } from 'express';
-import {
-  ContainerTypes,
-  ValidatedRequest,
-  ValidatedRequestSchema,
-} from 'express-joi-validation';
+import { RequestHandler } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { ReasonPhrases } from 'http-status-codes';
 
-import { gqlSdk } from '@/utils/gqlSDK';
-import { generateTicketExpiresAt } from '@/utils/ticket';
+import {
+  gqlSdk,
+  generateTicketExpiresAt,
+  getUserByEmail,
+  ENV,
+  createEmailRedirectionLink,
+} from '@/utils';
 import { emailClient } from '@/email';
-import { getUserByEmail, isValidRedirectTo } from '@/helpers';
-import { ENV } from '@/utils/env';
+import { sendError } from '@/errors';
+import { Joi, email, redirectTo } from '@/validation';
+import { EMAIL_TYPES } from '@/types';
 
-type BodyType = {
-  email: string;
-  options?: {
-    redirectTo?: string;
-  };
-};
+export const userEmailSendVerificationEmailSchema = Joi.object({
+  email: email.required(),
+  options: Joi.object({
+    redirectTo,
+  }).default(),
+}).meta({ className: 'UserEmailSendVerificationEmailSchema' });
 
-interface Schema extends ValidatedRequestSchema {
-  [ContainerTypes.Body]: BodyType;
-}
-
-export const userEmailSendVerificationEmailHandler = async (
-  req: ValidatedRequest<Schema>,
-  res: Response
-): Promise<unknown> => {
-  const { email, options } = req.body;
-
-  // check if redirectTo is valid
-  const redirectTo = options?.redirectTo ?? ENV.AUTH_CLIENT_URL;
-  if (!isValidRedirectTo(redirectTo)) {
-    return res.boom.badRequest(`'redirectTo' is not valid`);
+export const userEmailSendVerificationEmailHandler: RequestHandler<
+  {},
+  {},
+  {
+    email: string;
+    options: {
+      redirectTo: string;
+    };
   }
+> = async (req, res) => {
+  const {
+    email,
+    options: { redirectTo },
+  } = req.body;
 
   const user = await getUserByEmail(email);
 
   if (!user) {
-    return res.boom.badRequest('No user with such email');
+    return sendError(res, 'user-not-found');
   }
 
   if (user.emailVerified) {
-    return res.boom.badRequest("User's email is already verified");
+    return sendError(res, 'email-already-verified');
   }
 
   // TODO: possibly check when last email was sent to minimize abuse
@@ -60,6 +61,11 @@ export const userEmailSendVerificationEmailHandler = async (
   });
 
   const template = 'email-verify';
+  const link = createEmailRedirectionLink(
+    EMAIL_TYPES.VERIFY,
+    ticket,
+    redirectTo
+  );
   await emailClient.send({
     template,
     message: {
@@ -77,18 +83,22 @@ export const userEmailSendVerificationEmailHandler = async (
           prepared: true,
           value: template,
         },
+        'x-link': {
+          prepared: true,
+          value: link,
+        },
       },
     },
     locals: {
-      link: `${ENV.AUTH_SERVER_URL}/verify?&ticket=${ticket}&type=emailVerify&redirectTo=${redirectTo}`,
+      link,
       displayName: user.displayName,
       ticket,
-      redirectTo,
+      redirectTo: encodeURIComponent(redirectTo),
       locale: user.locale ?? ENV.AUTH_LOCALE_DEFAULT,
       serverUrl: ENV.AUTH_SERVER_URL,
       clientUrl: ENV.AUTH_CLIENT_URL,
     },
   });
 
-  return res.send('ok');
+  return res.send(ReasonPhrases.OK);
 };

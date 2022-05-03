@@ -1,11 +1,16 @@
 import { Client } from 'pg';
+import { StatusCodes } from 'http-status-codes';
 
 import { ENV } from '../../../src/utils/env';
 import { request } from '../../server';
 import { SignInResponse } from '../../../src/types';
-import { mailHogSearch, deleteAllMailHogEmails } from '../../utils';
+import {
+  mailHogSearch,
+  deleteAllMailHogEmails,
+  expectUrlParameters,
+} from '../../utils';
 
-// TODO test options
+// TODO: test options
 describe('email-password', () => {
   let client: Client;
 
@@ -35,7 +40,7 @@ describe('email-password', () => {
 
     const { body }: { body: SignInResponse } = await request
       .post('/signin/anonymous')
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     expect(body.session).toBeTruthy();
 
@@ -56,37 +61,41 @@ describe('email-password', () => {
         email,
         password,
       })
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     // make sure user activate email was sent
     const [message] = await mailHogSearch(email);
 
     expect(message).toBeTruthy();
 
-    const ticket = message.Content.Headers['X-Ticket'][0];
-    const redirectTo = message.Content.Headers['X-Redirect-To'][0];
+    const link = message.Content.Headers['X-Link'][0];
 
     // should not be abel to login before email is verified
     await request
       .post('/signin/email-password')
       .send({ email, password })
-      .expect(401);
+      .expect(StatusCodes.UNAUTHORIZED);
 
     // should not be able to reuse old refresh token
-    await request.post('/token').send({ refreshToken }).expect(401);
+    await request
+      .post('/token')
+      .send({ refreshToken })
+      .expect(StatusCodes.UNAUTHORIZED);
 
     // should verify email using ticket from email
-    await request
-      .get(
-        `/verify?ticket=${ticket}&type=signinPasswordless&redirectTo=${redirectTo}`
-      )
-      .expect(302);
+    const res = await request
+      .get(link.replace('http://localhost:4000', ''))
+      .expect(StatusCodes.MOVED_TEMPORARILY);
 
+    expectUrlParameters(res).not.toIncludeAnyMembers([
+      'error',
+      'errorDescription',
+    ]);
     // should be able to sign in after activated account
     await request
       .post('/signin/email-password')
       .send({ email, password })
-      .expect(200);
+      .expect(StatusCodes.OK);
   });
 
   it('should be able to deanonymize user with magic-link', async () => {
@@ -100,7 +109,7 @@ describe('email-password', () => {
 
     const { body }: { body: SignInResponse } = await request
       .post('/signin/anonymous')
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     expect(body.session).toBeTruthy();
 
@@ -120,24 +129,29 @@ describe('email-password', () => {
         email,
         password: '1234567',
       })
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     // make sure magic link email was sent
     const [message] = await mailHogSearch(email);
     expect(message).toBeTruthy();
 
-    const ticket = message.Content.Headers['X-Ticket'][0];
-    const redirectTo = message.Content.Headers['X-Redirect-To'][0];
+    const link = message.Content.Headers['X-Link'][0];
 
     // should not be able to reuse old refresh token
-    await request.post('/token').send({ refreshToken }).expect(401);
+    await request
+      .post('/token')
+      .send({ refreshToken })
+      .expect(StatusCodes.UNAUTHORIZED);
 
     // verify
-    await request
-      .get(
-        `/verify?ticket=${ticket}&type=signinPasswordless&redirectTo=${redirectTo}`
-      )
-      .expect(302);
+    const res = await request
+      .get(link.replace('http://localhost:4000', ''))
+      .expect(StatusCodes.MOVED_TEMPORARILY);
+
+    expectUrlParameters(res).not.toIncludeAnyMembers([
+      'error',
+      'errorDescription',
+    ]);
 
     // should be able to sign in using passwordless email
     await request
@@ -145,7 +159,7 @@ describe('email-password', () => {
       .send({
         email,
       })
-      .expect(200);
+      .expect(StatusCodes.OK);
   });
 
   it('should fail to deanonymize user unacceptable sign in method', async () => {
@@ -159,7 +173,7 @@ describe('email-password', () => {
 
     const { body }: { body: SignInResponse } = await request
       .post('/signin/anonymous')
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     expect(body.session).toBeTruthy();
 
@@ -177,7 +191,7 @@ describe('email-password', () => {
         email: 'joedoe@example.com',
         password: '1234567',
       })
-      .expect(400);
+      .expect(StatusCodes.BAD_REQUEST);
   });
 
   it('should fail to deanonymize user with already existing email', async () => {
@@ -196,11 +210,11 @@ describe('email-password', () => {
         email,
         password,
       })
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     const { body }: { body: SignInResponse } = await request
       .post('/signin/anonymous')
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     expect(body.session).toBeTruthy();
 
@@ -218,6 +232,6 @@ describe('email-password', () => {
         email,
         password,
       })
-      .expect(409);
+      .expect(StatusCodes.CONFLICT);
   });
 });
