@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import * as faker from 'faker';
+import { StatusCodes } from 'http-status-codes';
 
 import { request } from '../../server';
 import { ENV } from '../../../src/utils/env';
@@ -31,7 +32,7 @@ describe('user password', () => {
     const response = await request
       .post('/signup/email-password')
       .send({ email, password })
-      .expect(200);
+      .expect(StatusCodes.OK);
     accessToken = response.body.session.accessToken;
   });
 
@@ -39,7 +40,7 @@ describe('user password', () => {
     await request
       .post('/signin/email-password')
       .send({ email, password })
-      .expect(200);
+      .expect(StatusCodes.OK);
   });
 
   it('should change password with old password', async () => {
@@ -50,35 +51,35 @@ describe('user password', () => {
       .post('/user/password')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({ newPassword })
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     await request
       .post('/signin/email-password')
       .send({ email, password: oldPassword })
-      .expect(401);
+      .expect(StatusCodes.UNAUTHORIZED);
 
     await request
       .post('/signin/email-password')
       .send({ email, password: newPassword })
-      .expect(200);
+      .expect(StatusCodes.OK);
   });
 
   it('should change password with ticket', async () => {
-    await request.post('/user/password/reset').send({ email }).expect(200);
+    await request
+      .post('/user/password/reset')
+      .send({ email })
+      .expect(StatusCodes.OK);
 
     // get ticket from email
     const [message] = await mailHogSearch(email);
     expect(message).toBeTruthy();
 
-    const ticket = message.Content.Headers['X-Ticket'][0];
-    const redirectTo = message.Content.Headers['X-Redirect-To'][0];
+    const link = message.Content.Headers['X-Link'][0];
 
     // use password reset link
     await request
-      .get(
-        `/verify?ticket=${ticket}&type=signinPasswordless&redirectTo=${redirectTo}`
-      )
-      .expect(302);
+      .get(link.replace('http://localhost:4000', ''))
+      .expect(StatusCodes.MOVED_TEMPORARILY);
 
     // TODO
     // get refershToken from previous request
@@ -94,29 +95,29 @@ describe('user password', () => {
     //   .post('/user/password')
     //   .set('Authorization', `Bearer ${accessToken}`)
     //   .send({ ticket: 'incorrect', newPassword })
-    //   .expect(400);
+    //   .expect(StatusCodes.BAD_REQUEST);
 
     // await request
     //   .post('/user/password')
     //   .set('Authorization', `Bearer ${accessToken}`)
     //   .send({ ticket: `passwordReset:${uuidv4()}`, newPassword })
-    //   .expect(401);
+    //   .expect(StatusCodes.UNAUTHORIZED);
 
     // await request
     //   .post('/user/password')
     //   .set('Authorization', `Bearer ${accessToken}`)
     //   .send({ ticket, newPassword })
-    //   .expect(200);
+    //   .expect(StatusCodes.OK);
 
     // await request
     //   .post('/signin/email-password')
     //   .send({ email, password: oldPassword })
-    //   .expect(401);
+    //   .expect(StatusCodes.UNAUTHORIZED);
 
     // await request
     //   .post('/signin/email-password')
     //   .send({ email, password: newPassword })
-    //   .expect(200);
+    //   .expect(StatusCodes.OK);
   });
 
   it('should be able to pass "redirectTo" when changing password with ticket when ', async () => {
@@ -127,21 +128,19 @@ describe('user password', () => {
     await request
       .post('/user/password/reset')
       .send({ email, options })
-      .expect(200);
+      .expect(StatusCodes.OK);
 
     // get ticket from email
     const [message] = await mailHogSearch(email);
     expect(message).toBeTruthy();
 
-    const ticket = message.Content.Headers['X-Ticket'][0];
     const redirectTo = message.Content.Headers['X-Redirect-To'][0];
+    const link = message.Content.Headers['X-Link'][0];
 
     // use password reset link
     await request
-      .get(
-        `/verify?ticket=${ticket}&type=signinPasswordless&redirectTo=${redirectTo}`
-      )
-      .expect(302);
+      .get(link.replace('http://localhost:4000', ''))
+      .expect(StatusCodes.MOVED_TEMPORARILY);
 
     expect(redirectTo).toStrictEqual(options.redirectTo);
   });
