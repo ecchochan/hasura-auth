@@ -9,12 +9,15 @@ import { serverErrors } from './errors';
 import { authMiddleware } from './middleware/auth';
 import { addOpenApiRoute } from './openapi';
 import { uncaughtErrorLogger, httpLogger } from './logger';
+import { statsdMiddleware } from './middleware/statsd';
 
 const app = express();
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+app.use(statsdMiddleware);
 
 addOpenApiRoute(app);
 app.use(httpLogger);

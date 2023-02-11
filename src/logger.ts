@@ -1,5 +1,6 @@
 import winston from 'winston';
 import expressWinston, { LoggerOptions } from 'express-winston';
+import { statsd } from './utils/statsd';
 import { Response } from 'express';
 export const LOG_LEVEL = process.env.AUTH_LOG_LEVEL || 'info';
 
@@ -60,6 +61,9 @@ const loggerOptions: LoggerOptions = {
       return 'warn';
     }
     if (res.statusCode >= 500) {
+      statsd.increment('error', 1, 1, {
+        route: req.path,
+      });
       return 'error';
     }
     return 'info';
