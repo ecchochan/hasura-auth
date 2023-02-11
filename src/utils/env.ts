@@ -219,9 +219,9 @@ export const ENV = {
     return castBooleanEnv('AUTH_CONCEAL_ERRORS', false);
   },
   // * See ../server.ts
-  // get AUTH_SKIP_INIT() {
-  //   return castBooleanEnv('AUTH_SKIP_INIT', false);
-  // },
+  get AUTH_SKIP_INIT() {
+    return castBooleanEnv('AUTH_SKIP_INIT', false);
+  },
   // get AUTH_SKIP_SERVE() {
   //   return castBooleanEnv('AUTH_SKIP_SERVE', false);
   // },
