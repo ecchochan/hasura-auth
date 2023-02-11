@@ -32,7 +32,12 @@ export const ENV = {
     return castIntEnv('AUTH_PORT', 4000);
   },
   get AUTH_SERVER_URL() {
-    return castStringEnv('AUTH_SERVER_URL');
+    return (
+      castStringEnv('AUTH_SERVER_URL') + castStringEnv('AUTH_PATH_PREFIX', '')
+    );
+  },
+  get AUTH_PATH_PREFIX() {
+    return castStringEnv('AUTH_PATH_PREFIX', '');
   },
 
   // SMTP
